@@ -18,6 +18,7 @@ using helloworld::Greeter;
 
 class GreeterServiceImpl final : public Greeter::Service {
   Status SayHello(ServerContext* ctx, const HelloRequest* req, HelloReply* rep) override {
+    printf("calling %s() from RPC\n", __func__);
     std::string prefix = "Hello ";
     rep->set_message(prefix + req->name());
     return Status::OK;

@@ -1,17 +1,17 @@
 #ifndef __GRPC_HELLOWORLD_API_H__
 #define __GRPC_HELLOWORLD_API_H__
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int good_kamuee (void);
-void get_version (char* buf, size_t size);
-void grpc_log (const char* str);
-const char* get_grpc_log ();
+struct helloworld_client;
+typedef struct helloworld_client helloworld_client_t;
+
+helloworld_client_t* helloworld_client_create(const char* remote);
+void helloworld_client_free(helloworld_client_t* client);
+void helloworld_say_hello(helloworld_client_t* client);
 
 #ifdef __cplusplus
 }; /* extern C */
 #endif
-
 #endif /* __GRPC_HELLOWORLD_API_H__ */

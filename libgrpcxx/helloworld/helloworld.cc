@@ -12,10 +12,10 @@ using helloworld::HelloRequest;
 using helloworld::HelloReply;
 using helloworld::Greeter;
 
-class GreeterClient
+typedef struct helloworld_client
 {
   public:
-    GreeterClient(std::shared_ptr<Channel> channel)
+    helloworld_client(std::shared_ptr<Channel> channel)
       : stub_ (Greeter::NewStub (channel)) {}
 
     std::string SayHello (const std::string& user)
@@ -39,43 +39,26 @@ class GreeterClient
     }
   private:
     std::unique_ptr<Greeter::Stub> stub_;
-};
+} helloworld_client_t;
 
-int
-good_kamuee (void)
+helloworld_client_t*
+helloworld_client_create(const char* remote)
 {
-  auto channel = grpc::CreateChannel ("localhost:9999",
+  auto channel = grpc::CreateChannel (remote,
       grpc::InsecureChannelCredentials ());
-  GreeterClient greeter (channel);
+  helloworld_client_t* ret = new helloworld_client (channel);
+  return ret;
+}
+
+void helloworld_client_free(helloworld_client_t* client)
+{
+  delete client;
+}
+
+void helloworld_say_hello(helloworld_client_t* client)
+{
   std::string user = "world";
-  std::string rep  = greeter.SayHello(user);
+  std::string rep  = client->SayHello(user);
   printf("good_kamuee recv: %s\n", rep.c_str());
-}
-
-void
-get_version (char* buf, size_t size)
-{
-  auto channel = grpc::CreateChannel ("localhost:9999",
-      grpc::InsecureChannelCredentials ());
-  GreeterClient greeter (channel);
-  std::string user = "version";
-  std::string rep  = greeter.SayHello(user);
-  snprintf(buf, size, "%s", rep.c_str());
-}
-
-
-std::string buffer = "";
-
-void
-grpc_log (const char* str)
-{
-  buffer += str;
-  buffer += "\r\n";
-}
-
-const char*
-get_grpc_log ()
-{
-  return buffer.c_str();
 }
 

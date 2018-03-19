@@ -5,8 +5,11 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
-void oopenconfig(const char* str);
+struct openconfigd_client;
+typedef struct openconfigd_client openconfigd_client_t;
+
+openconfigd_client_t* openconfigd_client_create(const char* remote);
+void openconfigd_client_free(openconfigd_client_t* client);
 
 #ifdef __cplusplus
 } /* extern C */

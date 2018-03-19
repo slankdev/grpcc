@@ -14,10 +14,9 @@ using openconfig::RegisterReply;
 using openconfig::RegisterModuleRequest;
 using openconfig::RegisterModuleReply;
 
-class grpc_client
-{
+typedef struct openconfigd_client {
   public:
-    grpc_client(std::shared_ptr<Channel> channel)
+    openconfigd_client(std::shared_ptr<Channel> channel)
       : stub_ (Register::NewStub (channel)) {}
 
     void DoRegister()
@@ -56,10 +55,20 @@ class grpc_client
     }
   private:
     std::unique_ptr<Register::Stub> stub_;
-};
+} openconfigd_client_t;
 
-void oopenconfig(const char* str)
+openconfigd_client_t*
+openconfigd_client_create(const char* remote)
 {
-  printf("ohooho %s\n", str);
+  auto channel = grpc::CreateChannel (remote,
+      grpc::InsecureChannelCredentials ());
+  openconfigd_client_t* ret = new openconfigd_client (channel);
+  return ret;
 }
+
+void openconfigd_client_free(openconfigd_client_t* client)
+{
+  delete client;
+}
+
 
