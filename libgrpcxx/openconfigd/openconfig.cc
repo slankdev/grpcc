@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <vector>
 #include <string>
 #include <stdarg.h>
 #include <unistd.h>
@@ -42,6 +43,24 @@ namespace fmt {
     va_end(args);
     return str;
   }
+
+  std::vector<std::string> split(const std::string &str, char sep)
+  {
+    std::vector <std::string> v;
+    auto first = str.begin ();
+    while ( first != str.end () )
+      {
+        auto last = first;
+        while ( last != str.end () && *last != sep )
+          ++last;
+        v.push_back (std::string (first, last));
+        if( last != str.end () )
+          ++last;
+        first = last;
+      }
+    return v;
+  }
+
 } /* namespace fmt */
 
 typedef struct openconfigd_client
@@ -53,24 +72,23 @@ typedef struct openconfigd_client
       , config_stub_ (Config::NewStub (channel)) {}
 
     void
-    DoRegister ()
+    InstallCommand (std::string name,
+                    std::string module,
+                    std::string line,
+                    std::string mode,
+                    std::string helps,
+                    int32_t privilege)
     {
-      /*
-       * "name": "quagga_show",
-       * "line": "show running-config",
-       * "mode": "exec",
-       * "helps": [
-       *     "Show running system information",
-       *     "running configuration"
-       * ]
-       */
       RegisterRequest req;
-      req.set_name("xellico_show");
-      req.set_module(XELLICO_MODULE);
-      req.set_line("show xellico");
-      req.set_mode("exec");
-      req.add_helps("Show running system information");
-      req.add_helps("Show xellico information");
+      req.set_name(name);
+      req.set_module(module);
+      req.set_line(line);
+      req.set_mode(mode);
+      std::vector <std::string> helps_vec =
+        fmt::split (std::string (helps), '\n');
+      for (std::string& help : helps_vec) {
+        req.add_helps(help);
+      }
       req.set_privilege(1);
       req.set_code(openconfig::REDIRECT_SHOW);
 
@@ -83,7 +101,6 @@ typedef struct openconfigd_client
               req.line().c_str());
           return;
         }
-      printf("command install callbackid=%u\n", rep.callbackid());
     }
 
     std::unique_ptr< ClientReaderWriter <ConfigRequest, ConfigReply> >
@@ -102,7 +119,6 @@ typedef struct openconfigd_client
       bool b = config_stream->Write (req);
       if (!b) exit (-1);
       return config_stream;
-
     }
 
     void
@@ -132,8 +148,9 @@ openconfigd_client_create (const char* remote)
 {
   auto channel = grpc::CreateChannel (remote,
       grpc::InsecureChannelCredentials ());
-  openconfigd_client_t* ret = new openconfigd_client (channel);
-  return ret;
+  openconfigd_client_t* client = new openconfigd_client (channel);
+  client->DoRegisterModule ();
+  return client;
 }
 
 void
@@ -143,27 +160,27 @@ openconfigd_client_free (openconfigd_client_t* client)
 }
 
 void
-openconfigd_DoRegisterCommand (openconfigd_client_t* client)
-{
-  client->DoRegister();
-}
-
-void
-openconfigd_DoRegisterModule (openconfigd_client_t* client)
-{
-  client->DoRegisterModule ();
-}
-
-void
 openconfigd_DoConfig (openconfigd_client_t* client)
 {
   auto stream = client->DoConfig ();
   printf ("wainting\n");
-  while (!force_quit) {
+  while (!force_quit)
     sleep (1);
-  }
   bool b = stream->WritesDone ();
   if (! b) exit (-1);
+}
+
+void
+openconfigd_InstallCommand (
+        openconfigd_client_t* client,
+        const char* name,
+        const char* module,
+        const char* line,
+        const char* helps,
+        int32_t privilege)
+{
+  client->InstallCommand (name, module,
+      line, "exec", helps, privilege);
 }
 
 typedef struct openconfigd_server final : public Show::Service

@@ -9,9 +9,15 @@ typedef struct openconfigd_client openconfigd_client_t;
 
 openconfigd_client_t* openconfigd_client_create(const char* remote);
 void openconfigd_client_free(openconfigd_client_t* client);
-void openconfigd_DoRegisterModule(openconfigd_client_t* client);
-void openconfigd_DoRegisterCommand(openconfigd_client_t* client);
 void openconfigd_DoConfig(openconfigd_client_t* client);
+
+void openconfigd_InstallCommand (
+        openconfigd_client_t* client,
+        const char* name,
+        const char* module,
+        const char* line,
+        const char* helps,
+        int32_t privilege);
 
 void openconfigd_server_run(const char* local);
 
