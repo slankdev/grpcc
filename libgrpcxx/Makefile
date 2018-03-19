@@ -25,8 +25,6 @@ subclean:
 	make -C helloworld clean
 	make -C openconfigd clean
 
-test:
-	make -C ../test clean
-	make -C ../test
-	../test/a.out
-
+grpcbuild:
+	make -C helloworld grpcbuild
+	make -C openconfigd grpcbuild

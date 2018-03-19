@@ -105,7 +105,7 @@ typedef struct openconfigd_client
         }
     }
 
-
+    // TODO: not tested
     void
     DoConfig_Read (ConfigReply* rep)
     {
@@ -117,8 +117,9 @@ typedef struct openconfigd_client
         }
     }
 
+    // TODO: not tested
     void
-    DoConfig_Write (ConfigRequest& req)
+    DoConfig_Write (const ConfigRequest& req)
     {
       bool ret = config_stream->Write (req);
       if (! ret)
@@ -128,6 +129,7 @@ typedef struct openconfigd_client
         }
     }
 
+    // TODO: not tested
     void
     DoConfig_WritesDone ()
     {
@@ -139,18 +141,27 @@ typedef struct openconfigd_client
         }
     }
 
+    // TODO: not tested
     void
     DoConfig ()
     {
       ClientContext ctx;
-#if 0
-      std::unique_ptr
-        < ClientReaderWriter <ConfigRequest, ConfigReply> >
-        config_stream = config_stub_->DoConfig (&ctx);
-      this->config_stream = config_stream;
-#else
       this->config_stream = config_stub_->DoConfig (&ctx);
-#endif
+
+      ConfigRequest req;
+      req.set_type (openconfig::SUBSCRIBE_MULTI);
+      req.set_module (XELLICO_MODULE);
+      req.set_port (XELLICO_PORT);
+      req.add_path ("interfaces");
+      req.add_path ("protocols");
+      req.add_path ("policy");
+      config_stream->Write (req);
+
+      printf ("wainting\n");
+      while (!force_quit)
+        sleep (1);
+
+      config_stream->WritesDone ();
     }
 
     void
@@ -195,21 +206,6 @@ void
 openconfigd_DoConfig (openconfigd_client_t* client)
 {
   client->DoConfig ();
-
-  ConfigRequest req;
-  req.set_type (openconfig::SUBSCRIBE_MULTI);
-  req.set_module (XELLICO_MODULE);
-  req.set_port (XELLICO_PORT);
-  req.add_path ("interfaces");
-  req.add_path ("protocols");
-  req.add_path ("policy");
-  client->DoConfig_Write (req);
-
-  printf ("wainting\n");
-  while (!force_quit)
-    sleep (1);
-
-  client->DoConfig_WritesDone ();
 }
 
 void
