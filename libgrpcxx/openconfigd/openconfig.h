@@ -10,6 +10,9 @@ typedef struct openconfigd_client openconfigd_client_t;
 
 openconfigd_client_t* openconfigd_client_create(const char* remote);
 void openconfigd_client_free(openconfigd_client_t* client);
+void openconfigd_DoRegisterModule(openconfigd_client_t* client);
+void openconfigd_DoRegister(openconfigd_client_t* client);
+void openconfigd_DoConfig(openconfigd_client_t* client);
 
 #ifdef __cplusplus
 } /* extern C */

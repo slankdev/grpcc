@@ -20,7 +20,11 @@ int main(int argc, char** argv)
   /* helloworld_client_free(client); */
 
   // TODO Next
-  openconfigd_client_t* client = openconfigd_client_create("localhost:9999");
+  openconfigd_client_t* client = openconfigd_client_create("localhost:2650");
+  openconfigd_DoRegisterModule(client);
+  openconfigd_DoRegister(client);
+  getchar();
+  /* openconfigd_DoConfig(client); */
   openconfigd_client_free(client);
 }
 
