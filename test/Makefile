@@ -1,6 +1,6 @@
 
 GRPCXX := $(HOME)/grpcxx
-CFLAGS += -I$(GRPCXX)/libgrpcxx
+CFLAGS += -I$(GRPCXX)/libgrpcxx -g -O0
 LDFLAGS += -L$(GRPCXX)/libgrpcxx -lgrpcxx -lstdc++
 LDFLAGS += -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
 

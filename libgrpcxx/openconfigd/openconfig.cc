@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
 #include <grpcpp/grpcpp.h>
 #include "openconfig.grpc.pb.h"
 #include "openconfig.h"
@@ -21,11 +22,30 @@ using openconfig::Config;
 using openconfig::ConfigRequest;
 using openconfig::ConfigReply;
 
+#include <stdarg.h>
+namespace fmt {
+
+inline std::string sprintf(const char* fmt_, ...)
+{
+  char str[1000];
+  va_list args;
+  va_start(args, fmt_);
+  vsprintf(str, fmt_, args);
+  va_end(args);
+  return str;
+}
+
+} /* namespace fmt */
 
 typedef struct openconfigd_client {
   public:
+    std::unique_ptr< grpc::ClientReaderWriter<ConfigRequest, ConfigReply> > config_stream;
+
     openconfigd_client(std::shared_ptr<Channel> channel)
-      : stub_ (Register::NewStub (channel)) {}
+      : stub_ (Register::NewStub (channel))
+      , config_stub_ (Config::NewStub (channel))
+    { puts("construct"); }
+    ~openconfigd_client() { puts("destruct"); }
 
     void DoRegister()
     {
@@ -47,12 +67,10 @@ typedef struct openconfigd_client {
       printf("ok callbackid=%u\n", rep.callbackid());
     }
 
-    std::unique_ptr< grpc::ClientReaderWriter<ConfigRequest, ConfigReply> >
-    DoConfig()
+    void DoConfig()
     {
       ClientContext ctx;
-      std::unique_ptr< grpc::ClientReaderWriter<ConfigRequest, ConfigReply> > stream =
-			config_stub_->DoConfig(&ctx);
+      this->config_stream = config_stub_->DoConfig(&ctx);
 
       ConfigRequest req;
       req.set_type(openconfig::SUBSCRIBE_MULTI);
@@ -61,15 +79,24 @@ typedef struct openconfigd_client {
       req.add_path("interfaces");
       req.add_path("protocols");
       req.add_path("policy");
-      stream->Write(req);
-      return stream;
+      bool b = config_stream->Write(req);
+      if (!b) exit(-1);
+
+      printf("wainting\n");
+      while (1) {
+        printf(".");
+        sleep(1);
+      }
+
+      b = config_stream->WritesDone();
+      if (!b) exit(-1);
     }
 
     void DoRegisterModule()
     {
       RegisterModuleRequest req;
-      req.set_module("xellicod");
-      req.set_port("9980");
+      req.set_module(XELLICO_MODULE);
+      req.set_port(fmt::sprintf("%d", XELLICO_PORT));
 
       RegisterModuleReply rep;
       ClientContext ctx;
@@ -112,8 +139,6 @@ void openconfigd_DoRegisterModule(openconfigd_client_t* client)
 
 void openconfigd_DoConfig(openconfigd_client_t* client)
 {
-	std::unique_ptr< grpc::ClientReaderWriter<ConfigRequest, ConfigReply> > stream;
-	stream = client->DoConfig();
-	// printf("slank %p\n", &ret);
+  client->DoConfig();
 }
 

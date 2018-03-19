@@ -4,7 +4,7 @@ GRPCXX_PROTO = openconfig
 GRPCXX_PROTO_PATH = .
 include $(GRPCXX)/mk/grpc.vars.mk
 
-CXXFLAGS += $(GRPC_CXXFLAGS)
+CXXFLAGS += $(GRPC_CXXFLAGS) -g
 LDFLAGS += $(GRPC_LDFLAGS)
 
 TARGET = libgrpc_$(GRPCXX_PROTO).a
