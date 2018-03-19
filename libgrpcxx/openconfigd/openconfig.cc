@@ -60,12 +60,14 @@ namespace fmt {
       }
     return v;
   }
-
 } /* namespace fmt */
 
 typedef struct openconfigd_client
 {
   public:
+
+    std::unique_ptr < ClientReaderWriter
+      <ConfigRequest, ConfigReply> > config_stream;
 
     openconfigd_client (std::shared_ptr<Channel> channel)
       : register_stub_ (Register::NewStub (channel))
@@ -103,22 +105,52 @@ typedef struct openconfigd_client
         }
     }
 
-    std::unique_ptr< ClientReaderWriter <ConfigRequest, ConfigReply> >
+
+    void
+    DoConfig_Read (ConfigReply* rep)
+    {
+      bool ret = config_stream->Read (rep);
+      if (! ret)
+        {
+          fprintf (stderr, "Failed read config\n");
+          exit (-1);
+        }
+    }
+
+    void
+    DoConfig_Write (ConfigRequest& req)
+    {
+      bool ret = config_stream->Write (req);
+      if (! ret)
+        {
+          fprintf (stderr, "Failed write config\n");
+          exit (-1);
+        }
+    }
+
+    void
+    DoConfig_WritesDone ()
+    {
+      bool ret = this->config_stream->WritesDone ();
+      if (! ret)
+        {
+          fprintf (stderr, "Failed write done\n");
+          exit (-1);
+        }
+    }
+
+    void
     DoConfig ()
     {
       ClientContext ctx;
-      auto config_stream = config_stub_->DoConfig (&ctx);
-
-      ConfigRequest req;
-      req.set_type (openconfig::SUBSCRIBE_MULTI);
-      req.set_module (XELLICO_MODULE);
-      req.set_port (XELLICO_PORT);
-      req.add_path ("interfaces");
-      req.add_path ("protocols");
-      req.add_path ("policy");
-      bool b = config_stream->Write (req);
-      if (!b) exit (-1);
-      return config_stream;
+#if 0
+      std::unique_ptr
+        < ClientReaderWriter <ConfigRequest, ConfigReply> >
+        config_stream = config_stub_->DoConfig (&ctx);
+      this->config_stream = config_stream;
+#else
+      this->config_stream = config_stub_->DoConfig (&ctx);
+#endif
     }
 
     void
@@ -162,12 +194,22 @@ openconfigd_client_free (openconfigd_client_t* client)
 void
 openconfigd_DoConfig (openconfigd_client_t* client)
 {
-  auto stream = client->DoConfig ();
+  client->DoConfig ();
+
+  ConfigRequest req;
+  req.set_type (openconfig::SUBSCRIBE_MULTI);
+  req.set_module (XELLICO_MODULE);
+  req.set_port (XELLICO_PORT);
+  req.add_path ("interfaces");
+  req.add_path ("protocols");
+  req.add_path ("policy");
+  client->DoConfig_Write (req);
+
   printf ("wainting\n");
   while (!force_quit)
     sleep (1);
-  bool b = stream->WritesDone ();
-  if (! b) exit (-1);
+
+  client->DoConfig_WritesDone ();
 }
 
 void
