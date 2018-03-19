@@ -49,22 +49,32 @@ typedef struct openconfigd_client {
 
     void DoRegister()
     {
+      /*
+       * "name": "quagga_show",
+       * "line": "show running-config",
+       * "mode": "exec",
+       * "helps": [
+       *     "Show running system information",
+       *     "running configuration"
+       * ]
+       */
       RegisterRequest req;
-      req.set_name("df");
-      req.set_module("dfd");
-      req.set_mode("adfa");
-      req.set_line("df");
-      // req.set_privilege();
+      req.set_name("xellico_show");
+      req.set_module("show xellico");
+      req.set_mode("exec");
+      req.add_helps("Show running system information");
+      req.add_helps("xellico information");
+      req.set_privilege(1);
+      req.set_code(openconfig::REDIRECT_SHOW);
 
       RegisterReply rep;
       ClientContext ctx;
-
       Status status = stub_->DoRegister(&ctx, req, &rep);
       if (!status.ok()){
         printf("noooo\n");
         return;
       }
-      printf("ok callbackid=%u\n", rep.callbackid());
+      printf("command install callbackid=%u\n", rep.callbackid());
     }
 
     void DoConfig()
