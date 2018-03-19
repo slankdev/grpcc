@@ -11,16 +11,22 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+using grpc::Server;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::ServerWriter;
 
 using openconfig::Register;
 using openconfig::RegisterRequest;
 using openconfig::RegisterReply;
 using openconfig::RegisterModuleRequest;
 using openconfig::RegisterModuleReply;
-
 using openconfig::Config;
 using openconfig::ConfigRequest;
 using openconfig::ConfigReply;
+using openconfig::Show;
+using openconfig::ShowRequest;
+using openconfig::ShowReply;
 
 #include <stdarg.h>
 namespace fmt {
@@ -60,10 +66,11 @@ typedef struct openconfigd_client {
        */
       RegisterRequest req;
       req.set_name("xellico_show");
-      req.set_module("show xellico");
+      req.set_module(XELLICO_MODULE);
+      req.set_line("show xellico");
       req.set_mode("exec");
       req.add_helps("Show running system information");
-      req.add_helps("xellico information");
+      req.add_helps("Show xellico information");
       req.set_privilege(1);
       req.set_code(openconfig::REDIRECT_SHOW);
 
@@ -151,4 +158,41 @@ void openconfigd_DoConfig(openconfigd_client_t* client)
 {
   client->DoConfig();
 }
+
+typedef struct openconfigd_server final : public Show::Service {
+  Status Show(ServerContext* ctx, const ShowRequest* req,
+      ServerWriter<ShowReply>* writer) override
+  {
+    printf("calling %s() from RPC\n", __func__);
+    ShowReply rep;
+    rep.set_str("xellico is dummy name, My name is slankdev.");
+    writer->Write(rep);
+    return Status::OK;
+  }
+
+} openconfigd_server_t;
+
+void openconfigd_server_run()
+{
+  std::string server_addr = "0.0.0.0:9088";
+  openconfigd_server_t service;
+
+  ServerBuilder builder;
+  builder.AddListeningPort(server_addr, grpc::InsecureServerCredentials());
+  builder.RegisterService(&service);
+  std::unique_ptr<Server> server(builder.BuildAndStart());
+  printf("server listening on %s\n", server_addr.c_str());
+  server->Wait();
+}
+
+#if 0
+openconfigd_server_t*
+openconfigd_server_create(const char* local)
+{
+}
+
+void openconfigd_server_free(openconfigd_server_t* client)
+{
+}
+#endif
 
