@@ -9,7 +9,9 @@
 void*
 grpc_server_manager (void* param)
 {
-  openconfigd_server_run ("0.0.0.0:9088");
+  openconfigd_server_t* server = openconfigd_server_create ();
+  openconfigd_server_run (server, "0.0.0.0:9088");
+  openconfigd_server_free (server);
   pthread_exit (NULL);
 }
 

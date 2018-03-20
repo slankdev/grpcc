@@ -7,9 +7,9 @@ extern "C" {
 struct openconfigd_client;
 typedef struct openconfigd_client openconfigd_client_t;
 
-openconfigd_client_t* openconfigd_client_create(const char* remote);
-void openconfigd_client_free(openconfigd_client_t* client);
-void openconfigd_DoConfig(openconfigd_client_t* client);
+openconfigd_client_t* openconfigd_client_create (const char* remote);
+void openconfigd_client_free (openconfigd_client_t* client);
+void openconfigd_DoConfig (openconfigd_client_t* client);
 
 void openconfigd_InstallCommand (
         openconfigd_client_t* client,
@@ -19,7 +19,12 @@ void openconfigd_InstallCommand (
         const char* helps,
         int32_t privilege);
 
-void openconfigd_server_run(const char* local);
+struct openconfigd_server;
+typedef struct openconfigd_server openconfigd_server_t;
+
+openconfigd_server_t* openconfigd_server_create ();
+void openconfigd_server_free (openconfigd_server_t* server);
+void openconfigd_server_run (openconfigd_server_t* server, const char* local);
 
 #ifdef __cplusplus
 } /* extern C */

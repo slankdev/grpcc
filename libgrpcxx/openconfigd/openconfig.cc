@@ -235,17 +235,29 @@ typedef struct openconfigd_server final : public Show::Service
 
 } openconfigd_server_t;
 
+openconfigd_server_t*
+openconfigd_server_create ()
+{
+  openconfigd_server_t* ret = new openconfigd_server;
+  return ret;
+}
+
 void
-openconfigd_server_run (const char* local)
+openconfigd_server_free (openconfigd_server_t* server)
+{
+  delete server;
+}
+
+void
+openconfigd_server_run (openconfigd_server_t* server, const char* local)
 {
   std::string server_addr = local;
-  openconfigd_server_t service;
 
   ServerBuilder builder;
   builder.AddListeningPort (server_addr, grpc::InsecureServerCredentials ());
-  builder.RegisterService (&service);
-  std::unique_ptr <Server> server (builder.BuildAndStart ());
-  server->Wait ();
+  builder.RegisterService (server);
+  std::unique_ptr <Server> grpc_server (builder.BuildAndStart ());
+  grpc_server->Wait ();
 }
 
 
