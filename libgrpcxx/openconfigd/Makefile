@@ -1,21 +1,22 @@
 
-GRPCXX := $(HOME)/grpcxx
+GRPCXX_ROOT := ../../
 GRPCXX_PROTO = openconfig
 GRPCXX_PROTO_PATH = .
-include $(GRPCXX)/mk/grpc.vars.mk
+include $(GRPCXX_ROOT)/mk/vars.mk
 
-CXXFLAGS += $(GRPC_CXXFLAGS) -g
-LDFLAGS += $(GRPC_LDFLAGS)
+CXXFLAGS += $(GRPCXX_CXXFLAGS) -g
+LDFLAGS += $(GRPCXX_LDFLAGS)
 
-TARGET = libgrpc_$(GRPCXX_PROTO).a
+TARGET = libgrpcxx_$(GRPCXX_PROTO).a
 SRC = openconfig.cc
 OBJ = $(SRC:.cc=.o)
 
 all: $(OBJ)
 	rm -f $(TARGET)
-	ar -r $(TARGET) $(OBJ) $(GRPC_OBJ)
+	ar -r $(TARGET) $(OBJ) $(GRPCXX_OBJ)
 
 clean:
 	rm -f $(TARGET) $(OBJ)
 
-include $(GRPCXX)/mk/grpc.rules.mk
+include $(GRPCXX_ROOT)/mk/rules.mk
+

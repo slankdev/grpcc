@@ -1,30 +1,28 @@
 
 TARGET = libgrpcxx.a
-SUB_TARGETS = \
-	 grpc_wrapper/libgrpcxx_wrapper.a \
-	 openconfigd/libgrpc_openconfig.a \
-	 helloworld/libgrpc_helloworld.a
+SUB_LIBS = \
+	 openconfigd/libgrpcxx_openconfig.a \
+	 helloworld/libgrpcxx_helloworld.a
 
-all: sub $(TARGET)
+all: $(TARGET)
 
-$(TARGET): $(SUB_TARGETS)
-	$(RM) $@
-	$(AR) cqT $@ $^
-	echo "create $@\naddlib $@\nsave\nend" | ar -M
-
-clean: subclean
-	rm -f $(TARGET)
-
-sub:
-	make -C grpc_wrapper
+$(TARGET):
+	rm -f $@
 	make -C helloworld
 	make -C openconfigd
+	ar cqT $@ $(SUB_LIBS)
+	echo "create $@\naddlib $@\nsave\nend" | ar -M
 
-subclean:
-	make -C grpc_wrapper clean
+clean:
+	rm -f $(TARGET)
 	make -C helloworld clean
 	make -C openconfigd clean
 
 grpcbuild:
 	make -C helloworld grpcbuild
 	make -C openconfigd grpcbuild
+
+grpcclean:
+	make -C helloworld grpcclean
+	make -C openconfigd grpcclean
+

@@ -1,38 +1,47 @@
-# grpcxx
-C++ misc for gRPC
 
-## Install gRPC
+# libgrpcxx
 
+Tiny build scripts and wrapper for using grpc in C
+
+## Setup
+
+install grpc
 ```
-$ sudo apt-get install build-essential autoconf libtool pkg-config
-$ sudo apt-get install libgflags-dev libgtest-dev
-$ sudo apt-get install clang libc++-dev
-
-$ git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
-$ cd grpc
+$ sudo apt install build-essential autoconf libtool pkg-config libgflags-dev libgtest-dev clang libc++-dev
+$ git clone https://github.com/grpc/grpc && cd grpc
 $ git submodule update --init
 $ make && sudo make install
+```
 
-$ cd grpc/thrid_party/protobuf
+install proto-buf
+```
+$ cd grpc/third_party/protobuf
 $ sudo make install
+```
+
+clone and build libgrpcxx
+```
+$ git clone https://github.com/slankdev/grpcxx && cd grpcxx/libgrpcxx
+$
 ```
 
 ## Usage
 
 ```
-GRPCXX := /path/to/grpcxx
-GRPCXX_PROTO := gobgp.proto
-GRPCXX_PROTO_PATH := /path/to/proto
-include $(GRPCXX)/mk/grpc.vars.mk
-include $(GRPCXX)/mk/grpc.rules.mk
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <libgrpcxx.h>
+
+int main(int argc, char** argv)
+{
+}
 ```
 
 ```
-$ make grpcbuild
-$ make grpcclean
+CFLAGS += -I../
+LDFLAGS += -L../ -lgrpcxx -lstdc++
+
+all:
+	$(CC) $(CFLAGS) main.c $(LDFLAGS)
 ```
-
-## License and Author
-
-Hiroki Shirokura (slank.dev [at] gmail.com) <br>
-This software is developing under thre MIT License.
