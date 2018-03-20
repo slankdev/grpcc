@@ -4,14 +4,12 @@ SUB_LIBS = \
 	 openconfigd/libgrpcxx_openconfig.a \
 	 helloworld/libgrpcxx_helloworld.a
 
-all: $(TARGET)
-
-$(TARGET):
-	rm -f $@
+all:
+	rm -f $(TARGET)
 	make -C helloworld
 	make -C openconfigd
-	ar cqT $@ $(SUB_LIBS)
-	echo "create $@\naddlib $@\nsave\nend" | ar -M
+	ar cqT $(TARGET) $(SUB_LIBS)
+	echo "create $(TARGET)\naddlib $(TARGET)\nsave\nend" | ar -M
 
 clean:
 	rm -f $(TARGET)

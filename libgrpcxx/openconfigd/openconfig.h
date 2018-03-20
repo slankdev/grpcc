@@ -21,10 +21,15 @@ void openconfigd_InstallCommand (
 
 struct openconfigd_server;
 typedef struct openconfigd_server openconfigd_server_t;
+typedef void (*openconfigd_server_cbfunc_t)(int argc, char** argv);
 
 openconfigd_server_t* openconfigd_server_create ();
 void openconfigd_server_free (openconfigd_server_t* server);
 void openconfigd_server_run (openconfigd_server_t* server, const char* local);
+
+void openconfigd_server_set_callback (
+        openconfigd_server_t* server,
+        openconfigd_server_cbfunc_t fun);
 
 #ifdef __cplusplus
 } /* extern C */

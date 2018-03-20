@@ -105,6 +105,7 @@ typedef struct openconfigd_client
         }
     }
 
+#if 0
     // TODO: not tested
     void
     DoConfig_Read (ConfigReply* rep)
@@ -140,6 +141,7 @@ typedef struct openconfigd_client
           exit (-1);
         }
     }
+#endif
 
     // TODO: not tested
     void
@@ -155,7 +157,10 @@ typedef struct openconfigd_client
       req.add_path ("interfaces");
       req.add_path ("protocols");
       req.add_path ("policy");
-      config_stream->Write (req);
+      if (!config_stream->Write (req))
+      {
+        fprintf(stderr, "okashii\n");
+      }
 
       printf ("wainting\n");
       while (!force_quit)
@@ -170,6 +175,8 @@ typedef struct openconfigd_client
       RegisterModuleRequest req;
       req.set_module (XELLICO_MODULE);
       req.set_port (fmt::sprintf ("%d", XELLICO_PORT));
+      printf ("register module module=%s, port=%d\n",
+          XELLICO_MODULE, XELLICO_PORT);
 
       RegisterModuleReply rep;
       ClientContext ctx;
@@ -221,19 +228,34 @@ openconfigd_InstallCommand (
       line, "exec", helps, privilege);
 }
 
+
 typedef struct openconfigd_server final : public Show::Service
 {
-  Status Show (ServerContext* ctx, const ShowRequest* req,
-      ServerWriter <ShowReply>* writer) override
-  {
-    printf ("calling %s() from RPC\n", __func__);
-    ShowReply rep;
-    rep.set_str ("xellico is dummy name, My name is slankdev.");
-    writer->Write (rep);
-    return Status::OK;
-  }
+  public:
 
+    Status
+    Show (ServerContext* ctx, const ShowRequest* req,
+        ServerWriter <ShowReply>* writer) override
+    {
+      printf ("calling %s() from RPC\n", __func__);
+      if (callback) callback(0, NULL);
+
+      ShowReply rep;
+      rep.set_str ("xellico is dummy name, My name is slankdev.");
+      writer->Write (rep);
+      return Status::OK;
+    }
+
+  public:
+    openconfigd_server_cbfunc_t callback;
 } openconfigd_server_t;
+
+void
+openconfigd_server_set_callback (openconfigd_server_t* server,
+        openconfigd_server_cbfunc_t fun)
+{
+  server->callback = fun;
+}
 
 openconfigd_server_t*
 openconfigd_server_create ()
@@ -256,6 +278,7 @@ openconfigd_server_run (openconfigd_server_t* server, const char* local)
   ServerBuilder builder;
   builder.AddListeningPort (server_addr, grpc::InsecureServerCredentials ());
   builder.RegisterService (server);
+  printf("listening %s\n", local);
   std::unique_ptr <Server> grpc_server (builder.BuildAndStart ());
   grpc_server->Wait ();
 }

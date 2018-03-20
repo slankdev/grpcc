@@ -6,10 +6,25 @@
 #include <pthread.h>
 #include <libgrpcxx.h>
 
+void
+callback (int argc, char** argv)
+{
+  printf("slankdev\n");
+#if 0
+  const size_t old = 22;
+  for (size_t i=0; i<20; i++)
+    {
+      openconfigd_printf (vty, "slankdev is %zd years ago", old+i);
+    }
+#endif
+}
+
 void*
 grpc_server_manager (void* param)
 {
+  printf("start server thread \n");
   openconfigd_server_t* server = openconfigd_server_create ();
+  openconfigd_server_set_callback (server, callback);
   openconfigd_server_run (server, "0.0.0.0:9088");
   openconfigd_server_free (server);
   pthread_exit (NULL);
@@ -21,13 +36,13 @@ grpc_client_manager (void* param)
   openconfigd_client_t* client =
     openconfigd_client_create ("localhost:2650");
 
-  openconfigd_InstallCommand (client,
-      "xellico_show_version",
-      "xellico",
-      "show xellico version",
-      "Show running system info\n"
-      "Show xellico info\n"
-      "Show xellico version\n", 1);
+  /* openconfigd_InstallCommand (client, */
+  /*     "xellico_show_version", */
+  /*     "xellico", */
+  /*     "show xellico version", */
+  /*     "Show running system info\n" */
+  /*     "Show xellico info\n" */
+  /*     "Show xellico version\n", 1); */
 
   openconfigd_InstallCommand (client,
       "xellico_show",
