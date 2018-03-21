@@ -4,15 +4,12 @@
 extern "C" {
 #endif
 
-#define XELLICO_MODULE "xellicod"
-#define XELLICO_PORT 9088
-
 struct openconfigd_client;
 typedef struct openconfigd_client openconfigd_client_t;
 
-openconfigd_client_t* openconfigd_client_create (const char* remote);
+openconfigd_client_t* openconfigd_client_create (const char* remote, const char* modname, int modport);
 void openconfigd_client_free (openconfigd_client_t* client);
-void openconfigd_DoConfig (openconfigd_client_t* client);
+void openconfigd_DoConfig (openconfigd_client_t* client, const char* modname, int modport);
 
 void openconfigd_InstallCommand (
         openconfigd_client_t* client,

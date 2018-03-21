@@ -143,15 +143,15 @@ typedef struct openconfigd_client
 
     // TODO: not tested
     void
-    DoConfig ()
+    DoConfig (const char* modname, int modport)
     {
       ClientContext ctx;
       this->config_stream = config_stub_->DoConfig (&ctx);
 
       ConfigRequest req;
       req.set_type (openconfig::SUBSCRIBE_MULTI);
-      req.set_module (XELLICO_MODULE);
-      req.set_port (XELLICO_PORT);
+      req.set_module (modname);
+      req.set_port (modport);
       req.add_path ("interfaces");
       req.add_path ("protocols");
       req.add_path ("policy");
@@ -168,13 +168,13 @@ typedef struct openconfigd_client
     }
 
     void
-    DoRegisterModule ()
+    DoRegisterModule (const char* modname, int modport)
     {
       RegisterModuleRequest req;
-      req.set_module (XELLICO_MODULE);
-      req.set_port (fmt::sprintf ("%d", XELLICO_PORT));
+      req.set_module (modname);
+      req.set_port (fmt::sprintf ("%d", modport));
       printf ("register module module=%s, port=%d\n",
-          XELLICO_MODULE, XELLICO_PORT);
+          modname, modport);
 
       RegisterModuleReply rep;
       ClientContext ctx;
@@ -192,12 +192,12 @@ typedef struct openconfigd_client
 } openconfigd_client_t;
 
 openconfigd_client_t*
-openconfigd_client_create (const char* remote)
+openconfigd_client_create (const char* remote, const char* modname, int modport)
 {
   auto channel = grpc::CreateChannel (remote,
       grpc::InsecureChannelCredentials ());
   openconfigd_client_t* client = new openconfigd_client (channel);
-  client->DoRegisterModule ();
+  client->DoRegisterModule (modname, modport);
   return client;
 }
 
@@ -208,9 +208,9 @@ openconfigd_client_free (openconfigd_client_t* client)
 }
 
 void
-openconfigd_DoConfig (openconfigd_client_t* client)
+openconfigd_DoConfig (openconfigd_client_t* client, const char* modname, int modport)
 {
-  client->DoConfig ();
+  client->DoConfig (modname, modport);
 }
 
 void

@@ -5,16 +5,16 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libgrpcxx.h>
+#define XELLICO_MODULE "xellicod"
+#define XELLICO_PORT 9088
 #define OPENCONFIGD_PORT 2650
 
 void
 callback (int argc, char** argv, openconfigd_vty_t* vty)
 {
-  openconfigd_printf (vty, "slankdev %s \n", "world");
+  openconfigd_printf (vty, "slankdev %s %d\n", "world", 1);
   for (size_t i=0; i<argc; i++)
-    {
       openconfigd_printf (vty, " argv[%zd]: %s\n", i, argv[i]);
-    }
 }
 
 void*
@@ -36,7 +36,7 @@ grpc_client_manager (void* param)
   char str[256];
   snprintf (str, sizeof (str), "localhost:%d", OPENCONFIGD_PORT);
   openconfigd_client_t* client =
-    openconfigd_client_create (str);
+    openconfigd_client_create (str, XELLICO_MODULE, XELLICO_PORT);
 
   openconfigd_InstallCommand (client,
       "xellico_show_version",
@@ -53,7 +53,7 @@ grpc_client_manager (void* param)
       "Show running system info\n"
       "Show xellico info\n", 1);
 
-  openconfigd_DoConfig (client);
+  openconfigd_DoConfig (client, XELLICO_MODULE, XELLICO_PORT);
   getchar ();
   openconfigd_client_free (client);
   pthread_exit (NULL);
