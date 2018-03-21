@@ -9,7 +9,11 @@
 void
 callback (int argc, char** argv)
 {
-  printf("slankdev\n");
+  printf ("slankdev\n");
+  for (size_t i=0; i<argc; i++)
+    {
+      printf(" argv[%zd]: %s\n", i, argv[i]);
+    }
 #if 0
   const size_t old = 22;
   for (size_t i=0; i<20; i++)
@@ -36,17 +40,17 @@ grpc_client_manager (void* param)
   openconfigd_client_t* client =
     openconfigd_client_create ("localhost:2650");
 
-  /* openconfigd_InstallCommand (client, */
-  /*     "xellico_show_version", */
-  /*     "xellico", */
-  /*     "show xellico version", */
-  /*     "Show running system info\n" */
-  /*     "Show xellico info\n" */
-  /*     "Show xellico version\n", 1); */
+  openconfigd_InstallCommand (client,
+      "xellico_show_version",
+      "xellicod",
+      "show xellico version",
+      "Show running system info\n"
+      "Show xellico info\n"
+      "Show xellico version\n", 1);
 
   openconfigd_InstallCommand (client,
       "xellico_show",
-      "xellico",
+      "xellicod",
       "show xellico",
       "Show running system info\n"
       "Show xellico info\n", 1);

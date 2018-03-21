@@ -237,10 +237,19 @@ typedef struct openconfigd_server final : public Show::Service
     Show (ServerContext* ctx, const ShowRequest* req,
         ServerWriter <ShowReply>* writer) override
     {
-      printf ("calling %s() from RPC\n", __func__);
-      if (callback) callback(0, NULL);
+      if (callback)
+        {
+          char* argv [100];
+          std::vector <std::string> args =
+                fmt::split (req->line (), ' ');
+          for (size_t i=0; i<args.size (); i++)
+            argv[i] = &args[i][0];
+          int argc = args.size ();
+          callback (argc, argv);
+        }
 
       ShowReply rep;
+      printf ("exe[%s]\n", req->line().c_str());
       rep.set_str ("xellico is dummy name, My name is slankdev.");
       writer->Write (rep);
       return Status::OK;
