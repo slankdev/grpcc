@@ -4,6 +4,9 @@
 extern "C" {
 #endif
 
+#define XELLICO_MODULE "xellicod"
+#define XELLICO_PORT 9088
+
 struct openconfigd_client;
 typedef struct openconfigd_client openconfigd_client_t;
 
@@ -19,10 +22,11 @@ void openconfigd_InstallCommand (
         const char* helps,
         int32_t privilege);
 
-struct openconfigd_server;
+typedef struct openconfigd_vty openconfigd_vty_t;
 typedef struct openconfigd_server openconfigd_server_t;
-typedef void (*openconfigd_server_cbfunc_t)(int argc, char** argv);
+typedef void (*openconfigd_server_cbfunc_t)(int argc, char** argv, openconfigd_vty_t* vty);
 
+void openconfigd_printf (openconfigd_vty_t* vty, const char* fmt_, ...);
 openconfigd_server_t* openconfigd_server_create ();
 void openconfigd_server_free (openconfigd_server_t* server);
 void openconfigd_server_run (openconfigd_server_t* server, const char* local);

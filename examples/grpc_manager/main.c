@@ -5,30 +5,26 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <libgrpcxx.h>
+#define OPENCONFIGD_PORT 2650
 
 void
-callback (int argc, char** argv)
+callback (int argc, char** argv, openconfigd_vty_t* vty)
 {
-  printf ("slankdev\n");
+  openconfigd_printf (vty, "slankdev %s \n", "world");
   for (size_t i=0; i<argc; i++)
     {
-      printf(" argv[%zd]: %s\n", i, argv[i]);
+      openconfigd_printf (vty, " argv[%zd]: %s\n", i, argv[i]);
     }
-#if 0
-  const size_t old = 22;
-  for (size_t i=0; i<20; i++)
-    {
-      openconfigd_printf (vty, "slankdev is %zd years ago", old+i);
-    }
-#endif
 }
 
 void*
 grpc_server_manager (void* param)
 {
-  printf("start server thread \n");
   openconfigd_server_t* server = openconfigd_server_create ();
   openconfigd_server_set_callback (server, callback);
+
+  char str[256];
+  snprintf (str, sizeof (str), "0.0.0.0:%d", XELLICO_PORT);
   openconfigd_server_run (server, "0.0.0.0:9088");
   openconfigd_server_free (server);
   pthread_exit (NULL);
@@ -37,12 +33,14 @@ grpc_server_manager (void* param)
 void*
 grpc_client_manager (void* param)
 {
+  char str[256];
+  snprintf (str, sizeof (str), "localhost:%d", OPENCONFIGD_PORT);
   openconfigd_client_t* client =
-    openconfigd_client_create ("localhost:2650");
+    openconfigd_client_create (str);
 
   openconfigd_InstallCommand (client,
       "xellico_show_version",
-      "xellicod",
+      XELLICO_MODULE,
       "show xellico version",
       "Show running system info\n"
       "Show xellico info\n"
@@ -50,7 +48,7 @@ grpc_client_manager (void* param)
 
   openconfigd_InstallCommand (client,
       "xellico_show",
-      "xellicod",
+      XELLICO_MODULE,
       "show xellico",
       "Show running system info\n"
       "Show xellico info\n", 1);

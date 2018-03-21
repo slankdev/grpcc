@@ -7,8 +7,6 @@
 #include <grpcpp/grpcpp.h>
 #include "openconfig.grpc.pb.h"
 #include "openconfig.h"
-#define XELLICO_MODULE "xellicod"
-#define XELLICO_PORT 9088
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -228,6 +226,22 @@ openconfigd_InstallCommand (
       line, "exec", helps, privilege);
 }
 
+typedef struct openconfigd_vty
+{
+  std::string str;
+} openconfigd_vty_t;
+
+void openconfigd_printf (
+    openconfigd_vty_t* vty,
+    const char* fmt_, ...)
+{
+  char str[1000];
+  va_list args;
+  va_start(args, fmt_);
+  vsprintf(str, fmt_, args);
+  va_end(args);
+  vty->str += str;
+}
 
 typedef struct openconfigd_server final : public Show::Service
 {
@@ -242,16 +256,25 @@ typedef struct openconfigd_server final : public Show::Service
           char* argv [100];
           std::vector <std::string> args =
                 fmt::split (req->line (), ' ');
-          for (size_t i=0; i<args.size (); i++)
-            argv[i] = &args[i][0];
           int argc = args.size ();
-          callback (argc, argv);
+          for (size_t i=0; i<argc; i++)
+            argv[i] = &args[i][0];
+
+          openconfigd_vty_t vty;
+          callback (argc, argv, &vty);
+
+          ShowReply rep;
+          rep.set_str (vty.str);
+          writer->Write (rep);
+        }
+      else
+        {
+          ShowReply rep;
+          rep.set_str ("command is not installed.");
+          writer->Write (rep);
+          assert (false);
         }
 
-      ShowReply rep;
-      printf ("exe[%s]\n", req->line().c_str());
-      rep.set_str ("xellico is dummy name, My name is slankdev.");
-      writer->Write (rep);
       return Status::OK;
     }
 
@@ -283,11 +306,9 @@ void
 openconfigd_server_run (openconfigd_server_t* server, const char* local)
 {
   std::string server_addr = local;
-
   ServerBuilder builder;
   builder.AddListeningPort (server_addr, grpc::InsecureServerCredentials ());
   builder.RegisterService (server);
-  printf("listening %s\n", local);
   std::unique_ptr <Server> grpc_server (builder.BuildAndStart ());
   grpc_server->Wait ();
 }
