@@ -59,26 +59,14 @@ openconfigd_client_manager (void* param)
   pthread_exit (NULL);
 }
 
-void*
-gobgp_client_manager (void* param)
-{
-  gobgp_client_t* client = gobgp_client_create ("localhost:50051");
-  gobgp_client_MonitorRib (client);
-  gobgp_client_free (client);
-  pthread_exit (NULL);
-}
-
 void* grpc_manager ()
 {
-  pthread_t openconfigd_server_thread;
-  pthread_t openconfigd_client_thread;
-  pthread_t gobgp_client_thread;
-  pthread_create (&openconfigd_server_thread, NULL, openconfigd_server_manager, NULL);
-  pthread_create (&openconfigd_client_thread, NULL, openconfigd_client_manager, NULL);
-  pthread_create (&gobgp_client_thread, NULL, gobgp_client_manager, NULL);
-  pthread_join (openconfigd_server_thread, NULL);
-  pthread_join (openconfigd_client_thread, NULL);
-  pthread_join (gobgp_client_thread, NULL);
+  pthread_t server_thread;
+  pthread_t client_thread;
+  pthread_create (&server_thread, NULL, openconfigd_server_manager, NULL);
+  pthread_create (&client_thread, NULL, openconfigd_client_manager, NULL);
+  pthread_join (server_thread, NULL);
+  pthread_join (client_thread, NULL);
 }
 
 int main(int argc, char** argv)
