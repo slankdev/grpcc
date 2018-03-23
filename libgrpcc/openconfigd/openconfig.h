@@ -25,7 +25,7 @@ void openconfigd_InstallCommand (
  */
 typedef struct openconfigd_vty openconfigd_vty_t;
 typedef struct openconfigd_show_service openconfigd_show_service_t;
-openconfigd_show_service_t* openconfigd_show_service_create ();
+openconfigd_show_service_t* openconfigd_show_service_create (void);
 void openconfigd_show_service_free (openconfigd_show_service_t* service);
 
 typedef void (*openconfigd_show_service_cbfunc_t)(int argc, char** argv, openconfigd_vty_t* vty);
@@ -38,7 +38,7 @@ void openconfigd_show_service_set_callback (
  * Exec Service
  */
 typedef struct openconfigd_exec_service openconfigd_exec_service_t;
-openconfigd_exec_service_t* openconfigd_exec_service_create ();
+openconfigd_exec_service_t* openconfigd_exec_service_create (void);
 void openconfigd_exec_service_free (openconfigd_exec_service_t* service);
 
 
