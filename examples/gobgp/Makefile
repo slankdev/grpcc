@@ -1,7 +1,7 @@
 
-LIB_PATH := ../../libgrpcxx
+LIB_PATH := ../../libgrpcc
 CFLAGS += -I$(LIB_PATH) -g -O0
-LDFLAGS += -L$(LIB_PATH) -lgrpcxx -lstdc++
+LDFLAGS += -L$(LIB_PATH) -lgrpcc -lstdc++
 LDFLAGS += -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
 
 all: pre

@@ -28,6 +28,9 @@ using openconfig::ConfigReply;
 using openconfig::Show;
 using openconfig::ShowRequest;
 using openconfig::ShowReply;
+using openconfig::Exec;
+using openconfig::ExecRequest;
+using openconfig::ExecReply;
 
 volatile bool force_quit = false;
 
@@ -243,7 +246,7 @@ void openconfigd_printf (
   vty->str += str;
 }
 
-typedef struct openconfigd_server final : public Show::Service
+typedef struct openconfigd_show_service final : public Show::Service
 {
   public:
 
@@ -279,38 +282,50 @@ typedef struct openconfigd_server final : public Show::Service
     }
 
   public:
-    openconfigd_server_cbfunc_t callback;
-} openconfigd_server_t;
+    openconfigd_show_service_cbfunc_t callback;
+} openconfigd_show_service_t;
 
 void
-openconfigd_server_set_callback (openconfigd_server_t* server,
-        openconfigd_server_cbfunc_t fun)
+openconfigd_show_service_set_callback (openconfigd_show_service_t* service,
+        openconfigd_show_service_cbfunc_t fun)
 {
-  server->callback = fun;
+  service->callback = fun;
 }
 
-openconfigd_server_t*
-openconfigd_server_create ()
+openconfigd_show_service_t*
+openconfigd_show_service_create ()
 {
-  openconfigd_server_t* ret = new openconfigd_server;
+  openconfigd_show_service_t* ret = new openconfigd_show_service;
   return ret;
 }
 
 void
-openconfigd_server_free (openconfigd_server_t* server)
+openconfigd_show_service_free (openconfigd_show_service_t* service)
 {
-  delete server;
+  delete service;
+}
+
+typedef struct openconfigd_exec_service final : public Exec::Service
+{
+
+    Status
+    DoExec (ServerContext* ctx, const ExecRequest* req, ExecReply* rep) override
+    {
+      return Status::OK;
+    }
+
+} openconfigd_exec_service_t;
+
+openconfigd_exec_service_t*
+openconfigd_exec_service_create ()
+{
+  return new openconfigd_exec_service;
 }
 
 void
-openconfigd_server_run (openconfigd_server_t* server, const char* local)
+openconfigd_exec_service_free (openconfigd_exec_service_t* service)
 {
-  std::string server_addr = local;
-  ServerBuilder builder;
-  builder.AddListeningPort (server_addr, grpc::InsecureServerCredentials ());
-  builder.RegisterService (server);
-  std::unique_ptr <Server> grpc_server (builder.BuildAndStart ());
-  grpc_server->Wait ();
+  delete service;
 }
 
 

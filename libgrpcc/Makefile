@@ -1,12 +1,14 @@
 
-TARGET = libgrpcxx.a
+TARGET = libgrpcc.a
 SUB_LIBS = \
-	 openconfigd/libgrpcxx_openconfig.a \
-	 helloworld/libgrpcxx_helloworld.a \
-	 gobgp/libgrpcxx_gobgp.a \
+	 grpcc/libgrpcc_grpcc.a \
+	 openconfigd/libgrpcc_openconfig.a \
+	 helloworld/libgrpcc_helloworld.a \
+	 gobgp/libgrpcc_gobgp.a
 
 all:
 	rm -f $(TARGET)
+	make -C grpcc
 	make -C helloworld
 	make -C gobgp
 	make -C openconfigd
@@ -15,6 +17,7 @@ all:
 
 clean:
 	rm -f $(TARGET)
+	make -C grpcc clean
 	make -C gobgp clean
 	make -C helloworld clean
 	make -C openconfigd clean

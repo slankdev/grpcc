@@ -11,7 +11,7 @@ LDFLAGS += $(GRPCXX_LDFLAGS)
 LIBSLANKDEV := $(HOME)/git/libslankdev
 CXXFLAGS += -I$(LIBSLANKDEV) -std=c++11
 
-TARGET = libgrpcxx_$(GRPCXX_PROTO).a
+TARGET = libgrpcc_$(GRPCXX_PROTO).a
 SRC = gobgp.cc
 OBJ = $(SRC:.cc=.o)
 

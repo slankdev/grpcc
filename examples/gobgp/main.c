@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <libgrpcxx.h>
+#include <libgrpcc.h>
 
 void*
 grpc_gobgp_manager (void* param)

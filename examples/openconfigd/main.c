@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <libgrpcxx.h>
+#include <libgrpcc.h>
 #define XELLICO_MODULE "xellicod"
 #define XELLICO_PORT 9088
 #define OPENCONFIGD_PORT 2650
@@ -18,15 +18,23 @@ callback (int argc, char** argv, openconfigd_vty_t* vty)
 }
 
 void*
-openconfigd_server_manager (void* param)
+grpc_service_manager (void* param)
 {
-  openconfigd_server_t* server = openconfigd_server_create ();
-  openconfigd_server_set_callback (server, callback);
+  openconfigd_show_service_t* show_service = openconfigd_show_service_create ();
+  openconfigd_show_service_set_callback (show_service, callback);
+  openconfigd_exec_service_t* exec_service = openconfigd_exec_service_create ();
 
   char str[256];
   snprintf (str, sizeof (str), "0.0.0.0:%d", XELLICO_PORT);
-  openconfigd_server_run (server, "0.0.0.0:9088");
-  openconfigd_server_free (server);
+  grpcc_server_t* server = grpcc_server_create (str);
+  grpcc_server_RegisterService (server, show_service);
+  grpcc_server_RegisterService (server, exec_service);
+  grpcc_server_BuildAndStart (server);
+  grpcc_server_wait (server);
+
+  grpcc_server_free (server);
+  openconfigd_show_service_free (show_service);
+  openconfigd_exec_service_free (exec_service);
   pthread_exit (NULL);
 }
 
@@ -61,11 +69,11 @@ openconfigd_client_manager (void* param)
 
 void* grpc_manager ()
 {
-  pthread_t server_thread;
+  pthread_t show_server_thread;
   pthread_t client_thread;
-  pthread_create (&server_thread, NULL, openconfigd_server_manager, NULL);
+  pthread_create (&show_server_thread, NULL, grpc_service_manager, NULL);
   pthread_create (&client_thread, NULL, openconfigd_client_manager, NULL);
-  pthread_join (server_thread, NULL);
+  pthread_join (show_server_thread, NULL);
   pthread_join (client_thread, NULL);
 }
 
