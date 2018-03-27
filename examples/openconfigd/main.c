@@ -62,7 +62,6 @@ openconfigd_client_manager (void* param)
       "Show xellico info\n", 1);
 
   openconfigd_DoConfig (client, XELLICO_MODULE, XELLICO_PORT);
-  getchar ();
   openconfigd_client_free (client);
   pthread_exit (NULL);
 }

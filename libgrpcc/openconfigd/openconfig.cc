@@ -32,6 +32,19 @@ using openconfig::Exec;
 using openconfig::ExecRequest;
 using openconfig::ExecReply;
 
+using openconfig::SET;
+using openconfig::DELETE;
+using openconfig::VALIDATE_START;
+using openconfig::VALIDATE_END;
+using openconfig::VALIDATE_SUCCESS;
+using openconfig::VALIDATE_FAILED;
+using openconfig::COMMIT_START;
+using openconfig::COMMIT_END;
+using openconfig::SUBSCRIBE;
+using openconfig::SUBSCRIBE_MULTI;
+using openconfig::SUBSCRIBE_REQUEST;
+using openconfig::JSON_CONFIG;
+
 volatile bool force_quit = false;
 
 namespace fmt {
@@ -66,9 +79,6 @@ namespace fmt {
 typedef struct openconfigd_client
 {
   public:
-
-    std::unique_ptr < ClientReaderWriter
-      <ConfigRequest, ConfigReply> > config_stream;
 
     openconfigd_client (std::shared_ptr<Channel> channel)
       : register_stub_ (Register::NewStub (channel))
@@ -106,49 +116,54 @@ typedef struct openconfigd_client
         }
     }
 
-#if 0
-    // TODO: not tested
     void
-    DoConfig_Read (ConfigReply* rep)
+    configure_callback (int argc, const char** argv)
     {
-      bool ret = config_stream->Read (rep);
-      if (! ret)
-        {
-          fprintf (stderr, "Failed read config\n");
-          exit (-1);
-        }
+      printf ("configure_callback(%d,%p)\n", argc, argv);
+      for (size_t i=0; i<argc; i++)
+        printf (" argv[%zd]: %s \n", i, argv[i]);
     }
 
-    // TODO: not tested
     void
-    DoConfig_Write (const ConfigRequest& req)
+    handleConfigReply (ConfigReply* rep)
     {
-      bool ret = config_stream->Write (req);
-      if (! ret)
-        {
-          fprintf (stderr, "Failed write config\n");
-          exit (-1);
-        }
-    }
+      auto type = rep->type ();
+      switch (type) {
+        case COMMIT_START:
+          printf ("commit_start \n");
+          break;
 
-    // TODO: not tested
-    void
-    DoConfig_WritesDone ()
-    {
-      bool ret = this->config_stream->WritesDone ();
-      if (! ret)
-        {
-          fprintf (stderr, "Failed write done\n");
-          exit (-1);
-        }
+        case COMMIT_END:
+          printf ("commit_end \n");
+          break;
+
+        case SET:
+        case DELETE:
+          {
+            printf ("set/delete path: [");
+            int argc = rep->path ().size ();
+            const char* argv[argc];
+            for (size_t i=0; i<rep->path ().size (); i++)
+              argv[i] = rep->path ()[i].c_str ();
+            configure_callback (argc, argv);
+            break;
+          }
+
+        default:
+          printf ("unknow rep.type  : %u\n", rep->type());
+          exit (1);
+          break;
+      }
     }
-#endif
 
     void
     DoConfig (const char* modname, int modport)
     {
+
       ClientContext ctx;
-      this->config_stream = config_stub_->DoConfig (&ctx);
+      std::unique_ptr < ClientReaderWriter
+        <ConfigRequest, ConfigReply> >
+        stream = config_stub_->DoConfig (&ctx);
 
       ConfigRequest req;
       req.set_type (openconfig::SUBSCRIBE_MULTI);
@@ -157,24 +172,18 @@ typedef struct openconfigd_client
       req.add_path ("interfaces");
       // req.add_path ("protocols");
       // req.add_path ("policy");
-      bool ret = config_stream->Write (req);
+      bool ret = stream->Write (req);
       if (!ret) exit(1);
 
       while (!force_quit)
         {
           ConfigReply rep;
-          bool ret = config_stream->Read (&rep);
+          bool ret = stream->Read (&rep);
           if (!ret) break;
-
-          printf ("recv\n");
-          printf (" rep.result: %u\n", rep.result());
-          printf (" rep.type  : %u\n", rep.type());
-          printf (" rep.path.size: %d \n", rep.path().size());
-          for (size_t i=0; i<rep.path().size(); i++)
-            printf ("    path[%zd]: %s \n", i, rep.path()[i].c_str());
+          handleConfigReply (&rep);
         }
-
-      config_stream->WritesDone ();
+      // bool ret = config_stream->Write (req);
+      stream->WritesDone ();
     }
 
     void
@@ -196,6 +205,9 @@ typedef struct openconfigd_client
           exit(1);
         }
     }
+
+
+
   private:
     std::unique_ptr <Register::Stub> register_stub_;
     std::unique_ptr <Config::Stub> config_stub_;
@@ -221,6 +233,7 @@ void
 openconfigd_DoConfig (openconfigd_client_t* client, const char* modname, int modport)
 {
   client->DoConfig (modname, modport);
+
 }
 
 void
