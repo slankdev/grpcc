@@ -38,6 +38,18 @@ grpc_service_manager (void* param)
   pthread_exit (NULL);
 }
 
+void
+interface_debug (int argc, const char** argv)
+{
+  printf("set debug message if=%s msg=%s\n", argv[2], argv[5]);
+}
+
+void
+interface_setaddr (int argc, const char** argv)
+{
+  printf ("set ip address if=%s addr=%s\n", argv[2], argv[5]);
+}
+
 void*
 openconfigd_client_manager (void* param)
 {
@@ -46,7 +58,8 @@ openconfigd_client_manager (void* param)
   openconfigd_client_t* client =
     openconfigd_client_create (str, XELLICO_MODULE, XELLICO_PORT);
 
-  openconfigd_InstallCommand (client,
+  // TODO: Enhance interface
+  openconfigd_InstallShowCommand (client,
       "xellico_show_version",
       XELLICO_MODULE,
       "show xellico version",
@@ -54,14 +67,24 @@ openconfigd_client_manager (void* param)
       "Show xellico info\n"
       "Show xellico version\n", 1);
 
-  openconfigd_InstallCommand (client,
+  // TODO: Enhance interface
+  openconfigd_InstallShowCommand (client,
       "xellico_show",
       XELLICO_MODULE,
       "show xellico",
       "Show running system info\n"
       "Show xellico info\n", 1);
 
+  openconfigd_InstallConfigureCommand (client,
+      "interfaces interface WORD debug msg WORD",
+      interface_debug);
+
+  openconfigd_InstallConfigureCommand (client,
+      "interfaces interface WORD ipv4 address A.B.C.D/M",
+      interface_setaddr);
+
   openconfigd_DoConfig (client, XELLICO_MODULE, XELLICO_PORT);
+  /* openconfigd_DoConfig() is blocking */
   openconfigd_client_free (client);
   pthread_exit (NULL);
 }

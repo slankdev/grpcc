@@ -12,7 +12,7 @@ typedef struct openconfigd_client openconfigd_client_t;
 openconfigd_client_t* openconfigd_client_create (const char* remote, const char* modname, int modport);
 void openconfigd_client_free (openconfigd_client_t* client);
 void openconfigd_DoConfig (openconfigd_client_t* client, const char* modname, int modport);
-void openconfigd_InstallCommand (
+void openconfigd_InstallShowCommand (
         openconfigd_client_t* client,
         const char* name,
         const char* module,
@@ -33,13 +33,20 @@ void openconfigd_printf (openconfigd_vty_t* vty, const char* fmt_, ...);
 void openconfigd_show_service_set_callback (
         openconfigd_show_service_t* service,
         openconfigd_show_service_cbfunc_t fun);
+typedef void (*openconfigd_configure_cmd_callback_t)(int argc, const char** argv);
+void openconfigd_InstallConfigureCommand (openconfigd_client_t* client,
+    const char* line, openconfigd_configure_cmd_callback_t callback);
 
+#if 1
 /*
  * Exec Service
  */
 typedef struct openconfigd_exec_service openconfigd_exec_service_t;
 openconfigd_exec_service_t* openconfigd_exec_service_create (void);
 void openconfigd_exec_service_free (openconfigd_exec_service_t* service);
+#endif
+
+
 
 
 #ifdef __cplusplus

@@ -93,8 +93,8 @@ typedef struct openconfigd_client
                     int32_t privilege)
     {
       RegisterRequest req;
-      req.set_name(name);
-      req.set_module(module);
+      req.set_name (name);
+      req.set_module (module);
       req.set_line(line);
       req.set_mode(mode);
       std::vector <std::string> helps_vec =
@@ -117,14 +117,6 @@ typedef struct openconfigd_client
     }
 
     void
-    configure_callback (int argc, const char** argv)
-    {
-      printf ("configure_callback(%d,%p)\n", argc, argv);
-      for (size_t i=0; i<argc; i++)
-        printf (" argv[%zd]: %s \n", i, argv[i]);
-    }
-
-    void
     handleConfigReply (ConfigReply* rep)
     {
       auto type = rep->type ();
@@ -140,12 +132,22 @@ typedef struct openconfigd_client
         case SET:
         case DELETE:
           {
-            printf ("set/delete path: [");
+            printf ("set/delete : \n");
             int argc = rep->path ().size ();
             const char* argv[argc];
             for (size_t i=0; i<rep->path ().size (); i++)
               argv[i] = rep->path ()[i].c_str ();
-            configure_callback (argc, argv);
+
+            openconfigd_configure_cmd_callback_t fn;
+            fn = match (argc, argv);
+            if (fn) fn (argc, argv);
+            // else
+            //   {
+            //     printf ("not found configure_command(%d,%p)\n", argc, argv);
+            //     for (size_t i=0; i<argc; i++)
+            //       printf (" argv[%zd]: %s \n", i, argv[i]);
+            //   }
+
             break;
           }
 
@@ -182,7 +184,6 @@ typedef struct openconfigd_client
           if (!ret) break;
           handleConfigReply (&rep);
         }
-      // bool ret = config_stream->Write (req);
       stream->WritesDone ();
     }
 
@@ -206,11 +207,59 @@ typedef struct openconfigd_client
         }
     }
 
-
+    void
+    installConfigureCommand (const char* line,
+        openconfigd_configure_cmd_callback_t callback)
+    {
+      std::vector<std::string> args = fmt::split (std::string (line), ' ');
+      parser.push_back ({args, callback});
+    }
 
   private:
+
+    struct parser_entry
+    {
+      std::vector<std::string> args;
+      openconfigd_configure_cmd_callback_t fn;
+    };
+    std::vector <parser_entry> parser;
+
     std::unique_ptr <Register::Stub> register_stub_;
     std::unique_ptr <Config::Stub> config_stub_;
+
+    openconfigd_configure_cmd_callback_t
+    match (int argc, const char** argv)
+    {
+      for (auto& ent : parser)
+        {
+          if (ent.args.size() != argc)
+            continue;
+
+          bool match = true;
+          for (size_t i=0; i<ent.args.size(); i++)
+            {
+              if (ent.args[i] == "WORD")
+                continue;
+              else if (ent.args[i] == "A.B.C.D/M")
+                {
+                  uint32_t dummy[5];
+                  int ret = sscanf (argv[i], "%u.%u.%u.%u/%u",
+                      &dummy[0], &dummy[1], &dummy[2],
+                      &dummy[3], &dummy[4]);
+                  if (ret == 5) continue;
+                  else match = false;
+                }
+              else if (ent.args[i] != argv[i])
+                match = false;
+              else
+                continue;
+            }
+          if (match)
+            return ent.fn;
+        }
+      return nullptr;
+    }
+
 } openconfigd_client_t;
 
 openconfigd_client_t*
@@ -237,7 +286,7 @@ openconfigd_DoConfig (openconfigd_client_t* client, const char* modname, int mod
 }
 
 void
-openconfigd_InstallCommand (
+openconfigd_InstallShowCommand (
         openconfigd_client_t* client,
         const char* name,
         const char* module,
@@ -325,6 +374,7 @@ openconfigd_show_service_free (openconfigd_show_service_t* service)
   delete service;
 }
 
+#if 1
 typedef struct openconfigd_exec_service final : public Exec::Service
 {
 
@@ -347,5 +397,14 @@ openconfigd_exec_service_free (openconfigd_exec_service_t* service)
 {
   delete service;
 }
+#endif
+
+void
+openconfigd_InstallConfigureCommand (openconfigd_client_t* client,
+    const char* line, openconfigd_configure_cmd_callback_t callback)
+{
+  client->installConfigureCommand (line, callback);
+}
+
 
 
