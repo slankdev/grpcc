@@ -144,7 +144,6 @@ typedef struct openconfigd_client
     }
 #endif
 
-    // TODO: not tested
     void
     DoConfig (const char* modname, int modport)
     {
@@ -156,16 +155,24 @@ typedef struct openconfigd_client
       req.set_module (modname);
       req.set_port (modport);
       req.add_path ("interfaces");
-      req.add_path ("protocols");
-      req.add_path ("policy");
-      if (!config_stream->Write (req))
-      {
-        fprintf(stderr, "okashii\n");
-      }
+      // req.add_path ("protocols");
+      // req.add_path ("policy");
+      bool ret = config_stream->Write (req);
+      if (!ret) exit(1);
 
-      printf ("wainting\n");
       while (!force_quit)
-        sleep (1);
+        {
+          ConfigReply rep;
+          bool ret = config_stream->Read (&rep);
+          if (!ret) break;
+
+          printf ("recv\n");
+          printf (" rep.result: %u\n", rep.result());
+          printf (" rep.type  : %u\n", rep.type());
+          printf (" rep.path.size: %d \n", rep.path().size());
+          for (size_t i=0; i<rep.path().size(); i++)
+            printf ("    path[%zd]: %s \n", i, rep.path()[i].c_str());
+        }
 
       config_stream->WritesDone ();
     }

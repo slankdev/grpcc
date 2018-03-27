@@ -1,0 +1,89 @@
+module coreswitch {
+  yang-version "1";
+
+  namespace "http://coreswitch.io/";
+  prefix "coreswitch";
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+
+  container vlans {
+    list vlan {
+      key "id";
+      leaf id {
+        type uint16 {
+          range 1..4096;
+        }
+      }
+    }
+  }
+
+  container interfaces {
+    list interface {
+      key "name";
+      leaf name {
+        type string;
+      }
+      container ipv4 {
+        list address {
+          key "ip";
+          leaf ip {
+            type inet:ipv4-prefix;
+          }
+        }
+        uses quagga:if-ipv4;
+      }
+			container debug {
+				list msg {
+					key "msg";
+					leaf msg {
+						type string;
+					}
+				}
+			}
+      leaf shutdown {
+        type empty;
+      }
+      leaf descriptionx {
+        type string;
+      }
+    }
+  }
+
+  container protocols {
+    ext:help "Routing protocol configuration";
+    uses quagga:protocols;
+  }
+
+  container policy {
+    uses quagga:policy;
+  }
+
+  container system {
+    description
+      "System group configuration.";
+
+    leaf hostname {
+      type inet:domain-name;
+      description
+        "The name of the host.  This name can be a single domain
+        label or the fully qualified domain name of the host.";
+    }
+    container ntp {
+      uses "ntp:ntp";
+    }
+    container etcd {
+      list endpoints {
+        key "url";
+        leaf url {
+          type string;
+        }
+      }
+      leaf path {
+        type string;
+      }
+    }
+  }
+
+}
