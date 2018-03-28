@@ -1,4 +1,4 @@
-package quagga
+package kamuee
 
 var showCmdMap = map[string]func(string) *string{
 	"quagga_show": quaggaShow,
